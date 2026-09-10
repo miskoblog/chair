@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Chair — The boardroom does the work. You still run the room.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='m' x1='4' y1='2' x2='28' y2='30' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%234636E3'/%3E%3Cstop offset='1' stop-color='%237C3AED'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23m)'/%3E%3Cpath d='M11 8h10v7H11zM9 15h14M12 15v8M20 15v8' stroke='%23FAF9F6' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <form class="gate-card" id="gateForm">
+    <span class="gate-mark" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 32 32">
+        <defs><linearGradient id="chairGateMark" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4636E3" /><stop offset="1" stop-color="#7C3AED" /></linearGradient></defs>
+        <rect width="32" height="32" rx="8" fill="url(#chairGateMark)" />
+        <path d="M11 8h10v7H11zM9 15h14M12 15v8M20 15v8" stroke="#FAF9F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      </svg>
+    </span>
+    <h1>Chair</h1>
+    <p>Enter the access password to open this bonus.</p>
+    <input type="password" id="gatePassword" placeholder="Password" autocomplete="off" autofocus />
+    <button type="submit" class="primary-btn">Unlock</button>
+    <p class="gate-error" id="gateError">That password isn't right — try again.</p>
+  </form>
+</div>
+<script>
+  if (localStorage.getItem("chair_access") === "granted") {
+    document.getElementById("gate").classList.add("is-unlocked");
+  }
+  var storedTheme = localStorage.getItem("chair_theme");
+  if (storedTheme === "dark" || storedTheme === "light") {
+    document.documentElement.setAttribute("data-theme", storedTheme);
+  }
+</script>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 32 32">
+        <defs><linearGradient id="chairMark" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4636E3" /><stop offset="1" stop-color="#7C3AED" /></linearGradient></defs>
+        <rect width="32" height="32" rx="8" fill="url(#chairMark)" />
+        <path d="M11 8h10v7H11zM9 15h14M12 15v8M20 15v8" stroke="#FAF9F6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      </svg>
+    </span>
+    <div class="brand-text">
+      <span class="brand-name">Chair</span>
+      <span class="brand-tag">You still run the room</span>
+    </div>
+  </div>
+  <a class="powered-by" href="https://misanmorrison.com/" target="_blank" rel="noopener">
+    <span>Powered by</span><strong>Misan Morrison</strong>
+  </a>
+  <nav class="tabs" role="tablist" aria-label="Chair sections">
+    <button class="tab-btn is-active" data-tab="guide" role="tab" aria-selected="true">How to Use</button>
+    <button class="tab-btn" data-tab="brief" role="tab" aria-selected="false">Brief</button>
+    <button class="tab-btn" data-tab="verdict" role="tab" aria-selected="false">Verdict</button>
+    <button class="tab-btn" data-tab="runway" role="tab" aria-selected="false">Runway</button>
+  </nav>
+  <button class="profile-btn" id="profileBtn" type="button">My Business</button>
+  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch between light and dark theme" title="Switch theme">
+    <svg id="themeIconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+    <svg id="themeIconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+  </button>
+</header>
+
+<main class="app">
+
+<!-- ==================== GUIDE ==================== -->
+<section class="panel is-active" id="panel-guide">
+  <div class="panel-head">
+    <h1>How to Use Chair</h1>
+    <p>Click Staff AI assembles a boardroom that researches, debates and delivers your work. Chair covers the three jobs that stay yours: deciding what to ask for, judging what comes back, and getting it shipped. Nine tools across three tabs.</p>
+  </div>
+  <div class="guide">
+
+    <div class="guide-section guide-first">
+      <h2>Start here</h2>
+      <p>Two minutes of setup makes every other tool better.</p>
+      <ol>
+        <li>Press <span class="ui-ref">My Business</span> in the top bar and fill in what you sell, who you sell it to, and your brand voice. Press <span class="ui-ref">Save Profile</span>. Chair reuses this across tools so you never retype it.</li>
+        <li>New to Click Staff AI and unsure what to command first? Go to <span class="ui-ref">Brief</span> → <span class="ui-ref">Blank-Screen Breaker</span>. It ranks the highest-leverage missions for your situation.</li>
+        <li>Already know what you want built? Go straight to <span class="ui-ref">Brief</span> → <span class="ui-ref">Command Composer</span>.</li>
+      </ol>
+    </div>
+
+    <p class="guide-module-label">Tab 1 — Brief: write the command worth giving</p>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">1</span> Command Composer</h2>
+      <p>Turns your real situation into one paste-ready command, plus a reusable context block.</p>
+      <ol>
+        <li>Pick a <span class="ui-ref">Project type</span>. Each type asks for different things, because a launch brief and a technical brief are not the same shape.</li>
+        <li>Fill in the fields. <span class="ui-ref">The outcome you want</span> and <span class="ui-ref">This is done when</span> matter most — vague in, vague out.</li>
+        <li>Press <span class="ui-ref">Compose Command</span>. Your command appears on the right, with a <span class="ui-ref">Context Block</span> underneath it.</li>
+        <li>Press <span class="ui-ref">Copy</span> and paste the command straight into Click Staff AI. Paste the context block first if you want the boardroom to hold your business details.</li>
+        <li>Press <span class="ui-ref">Save</span> to keep it. Saved commands appear below in <span class="ui-ref">Saved Commands</span> — press <span class="ui-ref">Open</span> on any row to bring back both the command and every field you typed, so you can tweak and recompose. <span class="ui-ref">Delete</span> removes a row.</li>
+      </ol>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">2</span> Scope Splitter</h2>
+      <p>Tells you whether a job should be one command or several — and writes each one.</p>
+      <ol>
+        <li>Describe the project in <span class="ui-ref">What are you trying to get built?</span>, or press <span class="ui-ref">Pull from Composer</span> to reuse what you just wrote.</li>
+        <li>Set <span class="ui-ref">How many separate deliverables?</span>, <span class="ui-ref">How tangled are the pieces?</span> and the audience count.</li>
+        <li>Press <span class="ui-ref">Compute Split</span>. You get a breadth score, a recommended number of boardrooms, and each phase written out as its own command in run order.</li>
+        <li><span class="ui-ref">Save</span>, <span class="ui-ref">Open</span> and <span class="ui-ref">Delete</span> work exactly as in Composer.</li>
+      </ol>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">3</span> Blank-Screen Breaker</h2>
+      <p>Ranks what to command next, scored on impact, readiness and effort.</p>
+      <ol>
+        <li>Answer the six questions. <span class="ui-ref">What's most stuck right now?</span> and <span class="ui-ref">Hours you can give this week</span> move the ranking most.</li>
+        <li>Press <span class="ui-ref">Rank My Missions</span>. You get a ranked shortlist with each mission's score explained and its command written for your business.</li>
+        <li>Press <span class="ui-ref">Send to Composer</span> on any mission to open it in Command Composer with the fields pre-filled.</li>
+        <li><span class="ui-ref">Save</span> keeps a ranking; <span class="ui-ref">Open</span> restores your answers and the shortlist.</li>
+      </ol>
+    </div>
+
+    <p class="guide-module-label">Tab 2 — Verdict: judge what the boardroom returns</p>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">4</span> Deliverable Scorecard</h2>
+      <p>A weighted rubric per asset type, ending in ship / fix first / send back.</p>
+      <ol>
+        <li>Pick the <span class="ui-ref">Deliverable type</span>. The criteria change with it — a VSL script is scored on cold-traffic framing, an email sequence on send-order logic.</li>
+        <li>Score each criterion <span class="ui-ref">Missing</span>, <span class="ui-ref">Weak</span>, <span class="ui-ref">Okay</span> or <span class="ui-ref">Strong</span>.</li>
+        <li>Press <span class="ui-ref">Score It</span>. You get a percentage, a verdict, the weakest criteria ranked by weight, and — when it isn't a ship — a <span class="ui-ref">Send-Back Command</span> written to fix exactly those things.</li>
+        <li>Ship Tracker reads these scores, so anything that scored <strong>Send back</strong> can't be marked live by accident.</li>
+        <li><span class="ui-ref">Save</span> keeps the score; <span class="ui-ref">Open</span> restores every criterion rating.</li>
+      </ol>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">5</span> Claim Auditor</h2>
+      <p>Flags the claim types that get affiliates in trouble, with a safer rewrite for each.</p>
+      <ol>
+        <li>Paste the copy into <span class="ui-ref">Paste the copy to audit</span> — a VSL script, an email, a swipe, an ad.</li>
+        <li>Press <span class="ui-ref">Audit Claims</span>. Each flagged phrase is quoted back with a severity, the reason it's risky, and a suggested rewrite.</li>
+        <li>Clean copy returns <strong>No flagged patterns</strong> — that's a real result, not an error.</li>
+        <li><span class="ui-ref">Save</span> keeps the audit; <span class="ui-ref">Open</span> brings back the copy and the findings.</li>
+      </ol>
+      <p style="margin-top:12px"><strong>This is a copy-review aid, not legal advice.</strong> It catches common patterns; it can't tell you whether a specific claim is substantiated.</p>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">6</span> Voice Drift Checker</h2>
+      <p>Measures how far apart two or more assets have drifted.</p>
+      <ol>
+        <li>Paste your first asset in <span class="ui-ref">Asset 1</span> and the second in <span class="ui-ref">Asset 2</span>. Press <span class="ui-ref">Add Another Asset</span> for more.</li>
+        <li>Press <span class="ui-ref">Check Drift</span>. You get per-asset reading grade and sentence length, plus findings wherever they diverge — including mismatched prices, percentages and day-counts between assets.</li>
+        <li><span class="ui-ref">Save</span> keeps the check; <span class="ui-ref">Open</span> restores all pasted assets.</li>
+      </ol>
+    </div>
+
+    <p class="guide-module-label">Tab 3 — Runway: get it shipped, and count what it was worth</p>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">7</span> Launch Runway</h2>
+      <p>Back-schedules your delivered assets into dated deadlines.</p>
+      <ol>
+        <li>Set <span class="ui-ref">Cart opens</span> and <span class="ui-ref">Cart closes</span>.</li>
+        <li>Tick every asset the boardroom gave you, and tick <span class="ui-ref">I'm recruiting affiliates</span> if partners need lead time.</li>
+        <li>Press <span class="ui-ref">Build Runway</span>. Each asset gets a due date worked backwards from cart open. If the window is too tight, you get a warning saying by how many days.</li>
+        <li>Press <span class="ui-ref">Print</span> for a paper copy, or <span class="ui-ref">Send to Ship Tracker</span> to turn the plan into a live checklist.</li>
+        <li><span class="ui-ref">Save</span> and <span class="ui-ref">Open</span> restore the dates and ticked assets.</li>
+      </ol>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">8</span> Ship Tracker</h2>
+      <p>The honest count of what you actually shipped versus what you produced.</p>
+      <ol>
+        <li>Send a plan over from Launch Runway, or press <span class="ui-ref">Add Row</span> to track something manually.</li>
+        <li>Move each asset through <span class="ui-ref">Drafted</span> → <span class="ui-ref">Reviewed</span> → <span class="ui-ref">Scheduled</span> → <span class="ui-ref">Live</span> as you go.</li>
+        <li>Anything past its due date is highlighted, and the top row shows your <span class="ui-ref">Shipped</span> percentage.</li>
+        <li>This tab saves itself as you type — no Save button needed on the board. <span class="ui-ref">Save</span> on the summary keeps a dated snapshot you can reopen later.</li>
+      </ol>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="guide-number">9</span> Command Ledger</h2>
+      <p>What every boardroom command was actually worth, using real hire rates.</p>
+      <ol>
+        <li>Press <span class="ui-ref">Log a Command</span> after each boardroom run.</li>
+        <li>Enter what you asked for, tick which specialists it replaced, enter <span class="ui-ref">Hours it saved you</span>, and tick <span class="ui-ref">Shipped</span> once it's live.</li>
+        <li>The ledger totals your hours saved and the equivalent hire cost, using published market rates — strategist $325/hr, copywriter $162.50/hr, researcher $100/hr, developer $137.50/hr, designer $100/hr, project manager $90/hr, reviewer $70/hr (midpoints of the standard ranges).</li>
+        <li>The <span class="ui-ref">Ship rate</span> figure is the one worth watching: value only counts once something goes live.</li>
+        <li><span class="ui-ref">Save</span> keeps a snapshot of the whole ledger.</li>
+      </ol>
+    </div>
+
+    <div class="guide-section guide-note">
+      <h2>One thing to know</h2>
+      <p>Everything you enter is stored in <strong>this browser only</strong>, using localStorage. There are no accounts, no server, and nothing is sent anywhere — which also means your work won't follow you to another device or browser, and clearing your browser data will clear it. If a saved item matters, press <span class="ui-ref">Copy</span> and keep it somewhere else too.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== BRIEF ==================== -->
+<section class="panel" id="panel-brief">
+  <div class="panel-head">
+    <h1>Brief</h1>
+    <p>The boardroom is only as good as the sentence you give it. Click Staff AI decides <em>how</em> the work gets done — it never decides what to ask for, or supplies the specifics that separate a usable command from a generic one.</p>
+  </div>
+  <div class="subtabs" role="tablist">
+    <button class="subtab-btn is-active" data-sub="composer" role="tab">Command Composer</button>
+    <button class="subtab-btn" data-sub="splitter" role="tab">Scope Splitter</button>
+    <button class="subtab-btn" data-sub="breaker" role="tab">Blank-Screen Breaker</button>
+  </div>
+
+  <!-- Tool 1 -->
+  <div class="subpanel is-active" id="sub-composer">
+    <div class="tool-head">
+      <h2>Command Composer</h2>
+      <p>One paste-ready command built from your actual situation, plus a reusable context block. Each project type asks for a different field set.</p>
+    </div>
+    <div class="workspace">
+      <div class="form-card">
+        <div class="field">
+          <label for="cmpType">Project type</label>
+          <select id="cmpType"></select>
+        </div>
+        <div id="cmpFields"></div>
+        <div class="btn-row">
+          <button class="primary-btn" id="cmpRun" type="button">Compose Command</button>
+          <button class="ghost-btn" id="cmpClear" type="button">Clear</button>
+        </div>
+      </div>
+      <div>
+        <div class="output-card">
+          <div class="output-head">
+            <span class="output-label">Your Command</span>
+            <div class="output-actions">
+              <button class="ghost-btn" id="cmpSave" type="button">Save</button>
+              <button class="ghost-btn" id="cmpCopy" type="button">Copy</button>
+            </div>
+          </div>
+          <div id="cmpOut"><p class="output-placeholder">Pick a project type, fill in the fields, then press Compose Command.</p></div>
+        </div>
+        <div class="output-card saved-card">
+          <div class="output-head"><span class="output-label">Saved Commands</span></div>
+          <div class="saved-list" id="cmpSavedList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool 2 -->
+  <div class="subpanel" id="sub-splitter">
+    <div class="tool-head">
+      <h2>Scope Splitter</h2>
+      <p>One boardroom or several? A breadth score built from deliverable count, how tangled the pieces are, audience spread and whether research has to come first — then each phase written as its own command, in run order.</p>
+    </div>
+    <div class="workspace">
+      <div class="form-card">
+        <div class="field">
+          <label for="splDesc">What are you trying to get built?</label>
+          <textarea id="splDesc" placeholder="e.g. a complete launch for my intermediate-level course"></textarea>
+          <p class="field-hint"><button class="mini-btn" id="splPull" type="button">Pull from Composer</button></p>
+        </div>
+        <div class="field">
+          <label for="splCount">How many separate deliverables?</label>
+          <input type="number" id="splCount" min="1" max="40" value="3" />
+        </div>
+        <div class="field">
+          <label for="splDep">How tangled are the pieces?</label>
+          <select id="splDep">
+            <option value="none">Independent — any order works</option>
+            <option value="light">Lightly linked — a couple depend on others</option>
+            <option value="heavy">Heavily chained — each needs the last one finished</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="splAud">How many distinct audiences?</label>
+          <input type="number" id="splAud" min="1" max="6" value="1" />
+        </div>
+        <div class="field">
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="splResearch" /><span>Research or validation has to happen before anything gets built</span></label>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="primary-btn" id="splRun" type="button">Compute Split</button>
+          <button class="ghost-btn" id="splClear" type="button">Clear</button>
+        </div>
+      </div>
+      <div>
+        <div class="output-card">
+          <div class="output-head">
+            <span class="output-label">Recommended Split</span>
+            <div class="output-actions">
+              <button class="ghost-btn" id="splSave" type="button">Save</button>
+              <button class="ghost-btn" id="splCopy" type="button">Copy</button>
+            </div>
+          </div>
+          <div id="splOut"><p class="output-placeholder">Describe the project and press Compute Split.</p></div>
+        </div>
+        <div class="output-card saved-card">
+          <div class="output-head"><span class="output-label">Saved Splits</span></div>
+          <div class="saved-list" id="splSavedList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool 3 -->
+  <div class="subpanel" id="sub-breaker">
+    <div class="tool-head">
+      <h2>Blank-Screen Breaker</h2>
+      <p>A ranked shortlist instead of a 740-item menu. Missions are scored on impact, how ready you are to act on them, how well they fit your horizon, and what they cost you in hours.</p>
+    </div>
+    <div class="workspace">
+      <div class="form-card">
+        <div class="field">
+          <label for="brkSells">What do you sell?</label>
+          <input type="text" id="brkSells" placeholder="e.g. a done-for-you SEO service" />
+        </div>
+        <div class="field">
+          <label for="brkAudience">Who do you sell it to?</label>
+          <input type="text" id="brkAudience" placeholder="e.g. independent dental practices" />
+        </div>
+        <div class="field">
+          <label for="brkStuck">What's most stuck right now?</label>
+          <select id="brkStuck"></select>
+        </div>
+        <div class="field">
+          <label for="brkHorizon">What are you working toward?</label>
+          <select id="brkHorizon">
+            <option value="30">Something in the next 30 days</option>
+            <option value="90" selected>Something in the next 90 days</option>
+            <option value="180">A longer build — 6 months</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="brkHours">Hours you can give this week</label>
+          <input type="number" id="brkHours" min="1" max="80" value="10" />
+        </div>
+        <div class="field">
+          <label for="brkTried">What have you already tried? <span class="optional">(optional)</span></label>
+          <input type="text" id="brkTried" placeholder="e.g. cold email, Facebook ads" />
+        </div>
+        <div class="btn-row">
+          <button class="primary-btn" id="brkRun" type="button">Rank My Missions</button>
+          <button class="ghost-btn" id="brkClear" type="button">Clear</button>
+        </div>
+      </div>
+      <div>
+        <div class="output-card">
+          <div class="output-head">
+            <span class="output-label">Your Ranked Missions</span>
+            <div class="output-actions">
+              <button class="ghost-btn" id="brkSave" type="button">Save</button>
+              <button class="ghost-btn" id="brkCopy" type="button">Copy</button>
+            </div>
+          </div>
+          <div id="brkOut"><p class="output-placeholder">Answer the questions and press Rank My Missions.</p></div>
+        </div>
+        <div class="output-card saved-card">
+          <div class="output-head"><span class="output-label">Saved Rankings</span></div>
+          <div class="saved-list" id="brkSavedList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== VERDICT ==================== -->
+<section class="panel" id="panel-verdict">
+  <div class="panel-head">
+    <h1>Verdict</h1>
+    <p>Cross-agent review happens inside the room, before delivery. The last call is still yours — Click Staff AI says so itself: <em>"You review the work, add your own judgement, and deliver it to your client."</em></p>
+  </div>
+  <div class="subtabs" role="tablist">
+    <button class="subtab-btn is-active" data-sub="scorecard" role="tab">Deliverable Scorecard</button>
+    <button class="subtab-btn" data-sub="claims" role="tab">Claim Auditor</button>
+    <button class="subtab-btn" data-sub="drift" role="tab">Voice Drift Checker</button>
+  </div>
+
+  <!-- Tool 4 -->
+  <div class="subpanel is-active" id="sub-scorecard">
+    <div class="tool-head">
+      <h2>Deliverable Scorecard</h2>
+      <p>Each asset type loads its own weighted failure modes. Score them, get a verdict — and when it isn't a ship, a send-back command naming exactly what to fix.</p>
+    </div>
+    <div class="workspace">
+      <div class="form-card">
+        <div class="field">
+          <label for="scAsset">Deliverable type</label>
+          <select id="scAsset"></select>
+        </div>
+        <div id="scCriteria"></div>
+        <div class="btn-row">
+          <button class="primary-btn" id="scRun" type="button">Score It</button>
+          <button class="ghost-btn" id="scClear" type="button">Reset</button>
+        </div>
+      </div>
+      <div>
+        <div class="output-card">
+          <div class="output-head">
+            <span class="output-label">Verdict</span>
+            <div class="output-actions">
+              <button class="ghost-btn" id="scSave" type="button">Save</button>
+              <button class="ghost-btn" id="scCopy" type="button">Copy</button>
+            </div>
+          </div>
+          <div id="scOut"><p class="output-placeholder">Pick a deliverable type, rate each criterion, then press Score It.</p></div>
+        </div>
+        <div class="output-card saved-card">
+          <div class="output-head"><span class="output-label">Saved Scores</span></div>
+          <div class="saved-list" id="scSavedList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool 5 -->
+  <div class="subpanel" id="sub-claims">
+    <div class="tool-head">
+      <h2>Claim Auditor</h2>
+      <p>Scans for the claim patterns that get affiliates and vendors in trouble — earnings claims, absolutes, guarantees, testimonial framing, false scarcity, health language. Each hit gets a severity, a reason and a safer rewrite. Not legal advice.</p>
+    </div>
+    <div class="workspace">
+      <div class="form-card">
+        <div class="field">
+          <label for="clText">Paste the copy to audit</label>
+          <textarea id="clText" style="min-height:220px" placeholder="Paste a VSL script, email, swipe or ad here."></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="primary-btn" id="clRun" type="button">Audit Claims</button>
+          <button class="ghost-btn" id="clClear" type="button">Clear</button>
+        </div>
+      </div>
+      <div>
+        <div class="output-card">
+          <div class="output-head">
+            <span class="output-label">Audit Result</span>
+            <div class="output-actions">
+              <button class="ghost-btn" id="clSave" type="button">Save</button>
+              <button class="ghost-btn" id="clCopy" type="button">Copy</button>
+            </div>
+          </div>
+          <div id="clOut"><p class="output-placeholder">Paste your copy and press Audit Claims.</p></div>
+        </div>
+        <div class="output-card saved-card">
+          <div class="output-head"><span class="output-label">Saved Audits</span></div>
+          <div class="saved-list" id="clSavedList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool 6 -->
+  <div class="subpanel" id="sub-drift">
+    <div class="tool-head">
+      <h2>Voice Drift Checker</h2>
+      <p>Your eight assets came out of separate sessions. This measures how far apart they've drifted — reading grade, sentence length, calls to action, and the hard facts (prices, percentages, day-counts) that break a funnel when they disagree.</p>
+    </div>
+    <div class="workspace">
+      <div class="form-card">
+        <div id="drAssets"></div>
+        <div class="btn-row">
+          <button class="ghost-btn" id="drAdd" type="button">Add Another Asset</button>
+        </div>
+        <div class="btn-row">
+          <button class="primary-btn" id="drRun" type="button">Check Drift</button>
+          <button class="ghost-btn" id="drClear" type="button">Clear</button>
+        </div>
+      </div>
+      <div>
+        <div class="output-card">
+          <div class="output-head">
+            <span class="output-label">Drift Report</span>
+            <div class="output-actions">
+              <button class="ghost-btn" id="drSave" type="button">Save</button>
+              <button class="ghost-btn" id="drCopy" type="button">Copy</button>
+            </div>
+          </div>
+          <div id="drOut"><p class="output-placeholder">Paste at least two assets and press Check Drift.</p></div>
+        </div>
+        <div class="output-card saved-card">
+          <div class="output-head"><span class="output-label">Saved Drift Checks</span></div>
+          <div class="saved-list" id="drSavedList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== RUNWAY ==================== -->
+<section class="panel" id="panel-runway">
+  <div class="panel-head">
+    <h1>Runway</h1>
+    <p>Eight finished assets in ten minutes is not a launch — it's eight assets. The boardroom builds them and stops. This is the downstream half: dates, sequence, and an honest count of what actually shipped.</p>
+  </div>
+  <div class="subtabs" role="tablist">
+    <button class="subtab-btn is-active" data-sub="runwaycalc" role="tab">Launch Runway</button>
+    <button class="subtab-btn" data-sub="tracker" role="tab">Ship Tracker</button>
+    <button class="subtab-btn" data-sub="ledger" role="tab">Command Ledger</button>
+  </div>
+
+  <!-- Tool 7 -->
+  <div class="subpanel is-active" id="sub-runwaycalc">
+    <div class="tool-head">
+      <h2>Launch Runway</h2>
+      <p>Back-schedules each delivered asset from your cart-open date using real lead times — affiliate swipes go out first because partners need recruiting time; the VSL carries a record-and-edit buffer.</p>
+    </div>
+    <div class="workspace">
+      <div class="form-card">
+        <div class="field">
+          <label for="rwOpen">Cart opens</label>
+          <input type="date" id="rwOpen" />
+        </div>
+        <div class="field">
+          <label for="rwClose">Cart closes</label>
+          <input type="date" id="rwClose" />
+        </div>
+        <div class="field">
+          <label>Which assets did the boardroom deliver?</label>
+          <div class="checks" id="rwAssets"></div>
+        </div>
+        <div class="field">
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="rwAffiliates" /><span>I'm recruiting affiliates for this launch</span></label>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="primary-btn" id="rwRun" type="button">Build Runway</button>
+          <button class="ghost-btn" id="rwClear" type="button">Clear</button>
+        </div>
+      </div>
+      <div>
+        <div class="output-card">
+          <div class="output-head">
+            <span class="output-label">Your Runway</span>
+            <div class="output-actions">
+              <button class="ghost-btn" id="rwSave" type="button">Save</button>
+              <button class="ghost-btn" id="rwCopy" type="button">Copy</button>
+              <button class="ghost-btn" id="rwPrint" type="button">Print</button>
+              <button class="ghost-btn" id="rwSend" type="button">Send to Ship Tracker</button>
+            </div>
+          </div>
+          <div id="rwOut"><p class="output-placeholder">Set your cart dates, tick your assets, then press Build Runway.</p></div>
+        </div>
+        <div class="output-card saved-card">
+          <div class="output-head"><span class="output-label">Saved Runways</span></div>
+          <div class="saved-list" id="rwSavedList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool 8 -->
+  <div class="subpanel" id="sub-tracker">
+    <div class="tool-head">
+      <h2>Ship Tracker</h2>
+      <p>Produced is not shipped. Move each asset through drafted, reviewed, scheduled and live — anything past its due date is flagged, and anything the Scorecard sent back can't be marked live.</p>
+    </div>
+    <div>
+      <div class="output-card">
+        <div class="output-head">
+          <span class="output-label">Pipeline</span>
+          <div class="output-actions">
+            <button class="ghost-btn" id="trAdd" type="button">Add Row</button>
+            <button class="ghost-btn" id="trSave" type="button">Save</button>
+            <button class="ghost-btn" id="trCopy" type="button">Copy</button>
+          </div>
+        </div>
+        <div id="trSummary"></div>
+        <div class="table-scroll"><table class="data-table" id="trTable"></table></div>
+        <div id="trEmpty"></div>
+      </div>
+      <div class="output-card saved-card">
+        <div class="output-head"><span class="output-label">Saved Snapshots</span></div>
+        <div class="saved-list" id="trSavedList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool 9 -->
+  <div class="subpanel" id="sub-ledger">
+    <div class="tool-head">
+      <h2>Command Ledger</h2>
+      <p>What each boardroom command was actually worth, priced against published market rates for the specialists it replaced. Value only counts once something ships.</p>
+    </div>
+    <div>
+      <div class="output-card">
+        <div class="output-head">
+          <span class="output-label">Ledger</span>
+          <div class="output-actions">
+            <button class="ghost-btn" id="lgAdd" type="button">Log a Command</button>
+            <button class="ghost-btn" id="lgSave" type="button">Save</button>
+            <button class="ghost-btn" id="lgCopy" type="button">Copy</button>
+          </div>
+        </div>
+        <div id="lgSummary"></div>
+        <div class="table-scroll"><table class="data-table" id="lgTable"></table></div>
+        <div id="lgEmpty"></div>
+      </div>
+      <div class="output-card saved-card">
+        <div class="output-head"><span class="output-label">Saved Snapshots</span></div>
+        <div class="saved-list" id="lgSavedList"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="modal-backdrop" id="profileModal">
+  <div class="modal">
+    <h2>My Business</h2>
+    <p>Chair reuses this across Command Composer and Blank-Screen Breaker so you never retype it. Stored in this browser only.</p>
+    <div class="field">
+      <label for="pfSells">What do you sell?</label>
+      <input type="text" id="pfSells" placeholder="e.g. a done-for-you SEO service" />
+    </div>
+    <div class="field">
+      <label for="pfAudience">Who do you sell it to?</label>
+      <input type="text" id="pfAudience" placeholder="e.g. independent dental practices" />
+    </div>
+    <div class="field">
+      <label for="pfContext">Anything the boardroom should always know? <span class="optional">(optional)</span></label>
+      <textarea id="pfContext" placeholder="e.g. we only serve UK clients; our price point is £1,500/month"></textarea>
+    </div>
+    <div class="field">
+      <label for="pfVoice">Brand voice <span class="optional">(optional)</span></label>
+      <input type="text" id="pfVoice" placeholder="e.g. plain, direct, no hype" />
+    </div>
+    <div class="btn-row">
+      <button class="primary-btn" id="pfSave" type="button">Save Profile</button>
+      <button class="ghost-btn" id="pfClose" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
