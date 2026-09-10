@@ -59,6 +59,86 @@ function lsSet(key, value) {
   try { localStorage.setItem(NS + "_" + key, JSON.stringify(value)); } catch (e) { /* quota / private mode */ }
 }
 
+/* ---------------------------------------------------------------- workspaces
+
+   Each business is a workspace: its own drafts, saved entries, Ship Tracker
+   pipeline, Command Ledger and Scorecard verdicts. Global keys (access, theme,
+   the profile list itself) stay unprefixed; everything else is namespaced by
+   the active business id. */
+
+let ACTIVE_PROFILE_ID = null;
+
+const WORKSPACE_KEYS = [
+  "draft_composer", "draft_splitter", "draft_splitter_desc", "draft_breaker",
+  "draft_scorecard", "draft_claims", "draft_drift", "draft_runway",
+  "tracker_rows", "ledger_entries", "asset_verdicts",
+  "saved_composer", "saved_splitter", "saved_breaker", "saved_scorecard",
+  "saved_claims", "saved_drift", "saved_runway", "saved_tracker", "saved_ledger",
+];
+
+function wsKey(key) { return "p_" + ACTIVE_PROFILE_ID + "_" + key; }
+function wsGet(key, fallback) { return lsGet(wsKey(key), fallback); }
+function wsSet(key, value) { lsSet(wsKey(key), value); }
+
+function newProfileId() {
+  return "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+
+/** Reads the business list, creating one (and migrating any single-profile
+ *  data from before workspaces existed) on first run. */
+function loadProfiles() {
+  let profiles = lsGet("profiles", null);
+  if (Array.isArray(profiles) && profiles.length) return profiles;
+
+  const old = lsGet("profile", null) || {};
+  const id = newProfileId();
+  profiles = [{
+    id,
+    name: (old.sells || "").trim() || "My business",
+    sells: old.sells || "", audience: old.audience || "",
+    context: old.context || "", voice: old.voice || "",
+    createdAt: new Date().toISOString(),
+  }];
+  lsSet("profiles", profiles);
+  lsSet("active_profile", id);
+  // carry any pre-workspace work into the first business rather than orphaning it
+  WORKSPACE_KEYS.forEach((k) => {
+    const raw = localStorage.getItem(NS + "_" + k);
+    if (raw !== null) {
+      try { localStorage.setItem(NS + "_p_" + id + "_" + k, raw); localStorage.removeItem(NS + "_" + k); } catch (e) {}
+    }
+  });
+  return profiles;
+}
+
+function saveProfiles(profiles) { lsSet("profiles", profiles); }
+
+function getProfile() {
+  const profiles = loadProfiles();
+  return profiles.find((p) => p.id === ACTIVE_PROFILE_ID) || profiles[0];
+}
+
+function profileLabel(p) {
+  return (p && (p.name || p.sells) || "My business").trim() || "My business";
+}
+
+/** Removes every workspace key belonging to one business. */
+function purgeWorkspace(id) {
+  WORKSPACE_KEYS.forEach((k) => {
+    try { localStorage.removeItem(NS + "_p_" + id + "_" + k); } catch (e) {}
+  });
+}
+
+function initWorkspace() {
+  const profiles = loadProfiles();
+  let active = lsGet("active_profile", null);
+  if (!profiles.some((p) => p.id === active)) {
+    active = profiles[0].id;
+    lsSet("active_profile", active);
+  }
+  ACTIVE_PROFILE_ID = active;
+}
+
 function formatSavedAt(iso) {
   return new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
@@ -156,7 +236,7 @@ function goTo(tab, sub) {
 /* ---------------------------------------------------------------- save/reopen */
 
 function initSaveable({ toolId, listEl, getEntry, applyEntry, max = 50 }) {
-  const key = NS + "_saved_" + toolId;
+  const key = NS + "_" + wsKey("saved_" + toolId);
 
   const read = () => {
     try { return JSON.parse(localStorage.getItem(key)) || []; } catch (e) { return []; }
@@ -213,31 +293,113 @@ function initSaveable({ toolId, listEl, getEntry, applyEntry, max = 50 }) {
   };
 }
 
-/* ---------------------------------------------------------------- profile */
+/* ---------------------------------------------------------------- businesses */
 
-function getProfile() {
-  return lsGet("profile", { sells: "", audience: "", context: "", voice: "" });
-}
-
-function initProfile() {
+function initProfileUI() {
   const modal = document.getElementById("profileModal");
-  const fields = { sells: "pfSells", audience: "pfAudience", context: "pfContext", voice: "pfVoice" };
+  const fields = { name: "pfName", sells: "pfSells", audience: "pfAudience", context: "pfContext", voice: "pfVoice" };
 
-  function load() {
-    const p = getProfile();
+  function readFields() {
+    const out = {};
+    Object.keys(fields).forEach((k) => { out[k] = document.getElementById(fields[k]).value.trim(); });
+    return out;
+  }
+
+  function writeFields(p) {
     Object.keys(fields).forEach((k) => { document.getElementById(fields[k]).value = p[k] || ""; });
   }
 
-  document.getElementById("profileBtn").addEventListener("click", () => { load(); modal.classList.add("is-open"); });
+  function persistCurrentEdits() {
+    const profiles = loadProfiles();
+    const p = profiles.find((x) => x.id === ACTIVE_PROFILE_ID);
+    if (!p) return;
+    Object.assign(p, readFields());
+    if (!p.name) p.name = (p.sells || "My business").trim() || "My business";
+    saveProfiles(profiles);
+  }
+
+  function renderTopbar() {
+    const btn = document.getElementById("profileBtn");
+    const profiles = loadProfiles();
+    const label = profileLabel(getProfile());
+    btn.innerHTML = '<span class="pb-label">' + escapeHtml(label) + "</span>" +
+      (profiles.length > 1 ? '<span class="pb-caret">\u25be</span>' : "");
+    btn.title = profiles.length > 1
+      ? "Working on " + label + " — click to switch business"
+      : "Set up your business details";
+  }
+
+  function renderSelect() {
+    const sel = document.getElementById("pfSelect");
+    const profiles = loadProfiles();
+    sel.innerHTML = profiles.map((p) =>
+      '<option value="' + escapeHtml(p.id) + '"' + (p.id === ACTIVE_PROFILE_ID ? " selected" : "") + ">" + escapeHtml(profileLabel(p)) + "</option>").join("");
+    document.getElementById("pfCount").textContent = profiles.length === 1
+      ? "1 business set up."
+      : profiles.length + " businesses set up. Each keeps its own saved work, Ship Tracker and Ledger.";
+  }
+
+  function open() {
+    renderSelect();
+    writeFields(getProfile());
+    modal.classList.add("is-open");
+  }
+
+  function switchTo(id) {
+    persistCurrentEdits();
+    lsSet("active_profile", id);
+    location.reload();
+  }
+
+  document.getElementById("profileBtn").addEventListener("click", open);
   document.getElementById("pfClose").addEventListener("click", () => modal.classList.remove("is-open"));
   modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("is-open"); });
-  document.getElementById("pfSave").addEventListener("click", () => {
-    const p = {};
-    Object.keys(fields).forEach((k) => { p[k] = document.getElementById(fields[k]).value.trim(); });
-    lsSet("profile", p);
-    modal.classList.remove("is-open");
-    showToast("Profile saved");
+
+  document.getElementById("pfSelect").addEventListener("change", (e) => {
+    if (e.target.value !== ACTIVE_PROFILE_ID) switchTo(e.target.value);
   });
+
+  document.getElementById("pfSave").addEventListener("click", () => {
+    persistCurrentEdits();
+    renderTopbar();
+    renderSelect();
+    modal.classList.remove("is-open");
+    showToast("Business saved");
+  });
+
+  document.getElementById("pfNew").addEventListener("click", () => {
+    persistCurrentEdits();
+    const profiles = loadProfiles();
+    const id = newProfileId();
+    profiles.push({ id, name: "New business", sells: "", audience: "", context: "", voice: "", createdAt: new Date().toISOString() });
+    saveProfiles(profiles);
+    switchTo(id);
+  });
+
+  document.getElementById("pfDuplicate").addEventListener("click", () => {
+    persistCurrentEdits();
+    const profiles = loadProfiles();
+    const cur = getProfile();
+    const id = newProfileId();
+    // copies the business details, not its saved work — the new one starts clean
+    profiles.push({ id, name: profileLabel(cur) + " (copy)", sells: cur.sells, audience: cur.audience, context: cur.context, voice: cur.voice, createdAt: new Date().toISOString() });
+    saveProfiles(profiles);
+    switchTo(id);
+  });
+
+  document.getElementById("pfDelete").addEventListener("click", () => {
+    const profiles = loadProfiles();
+    if (profiles.length < 2) { showToast("You need at least one business"); return; }
+    const cur = getProfile();
+    if (!window.confirm('Delete "' + profileLabel(cur) + '" and all of its saved work, tracker rows and ledger entries? This cannot be undone.')) return;
+    purgeWorkspace(cur.id);
+    const remaining = profiles.filter((p) => p.id !== cur.id);
+    saveProfiles(remaining);
+    lsSet("active_profile", remaining[0].id);
+    location.reload();
+  });
+
+  renderTopbar();
 }
 
 /* ==========================================================================
@@ -338,7 +500,7 @@ function cmpRenderFields() {
   type.fields.forEach((f) => {
     document.getElementById("cmp_" + f).addEventListener("input", (e) => {
       cmpState.values[f] = e.target.value;
-      lsSet("draft_composer", cmpState);
+      wsSet("draft_composer", cmpState);
     });
   });
 }
@@ -360,7 +522,7 @@ function cmpRenderOut() {
   const btn = document.getElementById("cmpToSplitter");
   if (btn) btn.addEventListener("click", () => {
     document.getElementById("splDesc").value = cmpState.values.outcome || "";
-    lsSet("draft_splitter_desc", cmpState.values.outcome || "");
+    wsSet("draft_splitter_desc", cmpState.values.outcome || "");
     goTo("brief", "splitter");
   });
 }
@@ -369,7 +531,7 @@ function initComposer() {
   const sel = document.getElementById("cmpType");
   sel.innerHTML = CMP_TYPES.map((t) => `<option value="${t.id}">${escapeHtml(t.label)}</option>`).join("");
 
-  const draft = lsGet("draft_composer", null);
+  const draft = wsGet("draft_composer", null);
   if (draft && draft.type) cmpState = draft;
   sel.value = cmpState.type;
   cmpRenderFields();
@@ -378,12 +540,12 @@ function initComposer() {
   sel.addEventListener("change", () => {
     cmpState.type = sel.value;
     cmpRenderFields();
-    lsSet("draft_composer", cmpState);
+    wsSet("draft_composer", cmpState);
   });
 
   document.getElementById("cmpRun").addEventListener("click", () => {
     cmpState.result = computeCommand(cmpState.type, cmpState.values);
-    lsSet("draft_composer", cmpState);
+    wsSet("draft_composer", cmpState);
     cmpRenderOut();
   });
 
@@ -391,7 +553,7 @@ function initComposer() {
     cmpState = { type: sel.value, values: {}, result: null };
     cmpRenderFields();
     cmpRenderOut();
-    lsSet("draft_composer", cmpState);
+    wsSet("draft_composer", cmpState);
     showToast("Cleared");
   });
 
@@ -413,7 +575,7 @@ function initComposer() {
       document.getElementById("cmpType").value = p.type;
       cmpRenderFields();
       cmpRenderOut();
-      lsSet("draft_composer", cmpState);
+      wsSet("draft_composer", cmpState);
     },
   });
   document.getElementById("cmpSave").addEventListener("click", saveable.save);
@@ -518,9 +680,9 @@ function splRenderOut() {
 }
 
 function initSplitter() {
-  const savedDesc = lsGet("draft_splitter_desc", "");
+  const savedDesc = wsGet("draft_splitter_desc", "");
   if (savedDesc) document.getElementById("splDesc").value = savedDesc;
-  const draft = lsGet("draft_splitter", null);
+  const draft = wsGet("draft_splitter", null);
   if (draft) {
     document.getElementById("splDesc").value = draft.inputs.description || "";
     document.getElementById("splCount").value = draft.inputs.deliverables;
@@ -532,7 +694,7 @@ function initSplitter() {
   splRenderOut();
 
   document.getElementById("splPull").addEventListener("click", () => {
-    const d = lsGet("draft_composer", null);
+    const d = wsGet("draft_composer", null);
     const outcome = d && d.values ? (d.values.outcome || "") : "";
     if (!outcome) { showToast("Nothing in Composer yet"); return; }
     document.getElementById("splDesc").value = outcome;
@@ -542,7 +704,7 @@ function initSplitter() {
   document.getElementById("splRun").addEventListener("click", () => {
     const inputs = splReadInputs();
     splState.result = computeSplit(inputs);
-    lsSet("draft_splitter", { inputs, result: splState.result });
+    wsSet("draft_splitter", { inputs, result: splState.result });
     splRenderOut();
   });
 
@@ -553,7 +715,7 @@ function initSplitter() {
     document.getElementById("splAud").value = 1;
     document.getElementById("splResearch").checked = false;
     splState.result = null;
-    lsSet("draft_splitter", null);
+    wsSet("draft_splitter", null);
     splRenderOut();
     showToast("Cleared");
   });
@@ -579,7 +741,7 @@ function initSplitter() {
       document.getElementById("splAud").value = p.inputs.audiences;
       document.getElementById("splResearch").checked = !!p.inputs.researchFirst;
       splState.result = p.result;
-      lsSet("draft_splitter", p);
+      wsSet("draft_splitter", p);
       splRenderOut();
     },
   });
@@ -698,7 +860,7 @@ function brkRenderOut() {
         values: { outcome: m.command, business: inputs.sells, audience: inputs.audience },
         result: null,
       };
-      lsSet("draft_composer", cmpState);
+      wsSet("draft_composer", cmpState);
       document.getElementById("cmpType").value = cmpState.type;
       cmpRenderFields();
       cmpRenderOut();
@@ -716,7 +878,7 @@ function initBreaker() {
   if (profile.sells) document.getElementById("brkSells").value = profile.sells;
   if (profile.audience) document.getElementById("brkAudience").value = profile.audience;
 
-  const draft = lsGet("draft_breaker", null);
+  const draft = wsGet("draft_breaker", null);
   if (draft) {
     document.getElementById("brkSells").value = draft.inputs.sells || "";
     document.getElementById("brkAudience").value = draft.inputs.audience || "";
@@ -731,7 +893,7 @@ function initBreaker() {
   document.getElementById("brkRun").addEventListener("click", () => {
     const inputs = brkReadInputs();
     brkState.result = computeMissionRanking(inputs);
-    lsSet("draft_breaker", { inputs, result: brkState.result });
+    wsSet("draft_breaker", { inputs, result: brkState.result });
     brkRenderOut();
   });
 
@@ -741,7 +903,7 @@ function initBreaker() {
     document.getElementById("brkHorizon").value = "90";
     document.getElementById("brkHours").value = 10;
     brkState.result = null;
-    lsSet("draft_breaker", null);
+    wsSet("draft_breaker", null);
     brkRenderOut();
     showToast("Cleared");
   });
@@ -768,7 +930,7 @@ function initBreaker() {
       document.getElementById("brkHours").value = p.inputs.hours;
       document.getElementById("brkTried").value = p.inputs.tried || "";
       brkState.result = p.result;
-      lsSet("draft_breaker", p);
+      wsSet("draft_breaker", p);
       brkRenderOut();
     },
   });
@@ -917,7 +1079,7 @@ function scRenderCriteria() {
       seg.querySelectorAll(".seg-btn").forEach((b) => b.classList.remove("is-active"));
       btn.classList.add("is-active");
       scState.scores[seg.dataset.crit] = Number(btn.dataset.val);
-      lsSet("draft_scorecard", scState);
+      wsSet("draft_scorecard", scState);
     });
   });
 }
@@ -947,7 +1109,7 @@ function initScorecard() {
   const sel = document.getElementById("scAsset");
   sel.innerHTML = SC_ASSETS.map((a) => `<option value="${a.id}">${escapeHtml(a.label)}</option>`).join("");
 
-  const draft = lsGet("draft_scorecard", null);
+  const draft = wsGet("draft_scorecard", null);
   if (draft && draft.asset) scState = draft;
   sel.value = scState.asset;
   scRenderCriteria();
@@ -959,16 +1121,16 @@ function initScorecard() {
     scState.result = null;
     scRenderCriteria();
     scRenderOut();
-    lsSet("draft_scorecard", scState);
+    wsSet("draft_scorecard", scState);
   });
 
   document.getElementById("scRun").addEventListener("click", () => {
     scState.result = computeScorecard(scState.asset, scState.scores);
-    lsSet("draft_scorecard", scState);
+    wsSet("draft_scorecard", scState);
     // Ship Tracker reads these — a "send it back" blocks marking that asset live.
-    const verdicts = lsGet("asset_verdicts", {});
+    const verdicts = wsGet("asset_verdicts", {});
     verdicts[scState.asset] = { verdict: scState.result.verdict, pct: scState.result.pct, at: new Date().toISOString() };
-    lsSet("asset_verdicts", verdicts);
+    wsSet("asset_verdicts", verdicts);
     scRenderOut();
   });
 
@@ -977,7 +1139,7 @@ function initScorecard() {
     scState.result = null;
     scRenderCriteria();
     scRenderOut();
-    lsSet("draft_scorecard", scState);
+    wsSet("draft_scorecard", scState);
     showToast("Reset");
   });
 
@@ -1000,7 +1162,7 @@ function initScorecard() {
       document.getElementById("scAsset").value = p.asset;
       scRenderCriteria();
       scRenderOut();
-      lsSet("draft_scorecard", scState);
+      wsSet("draft_scorecard", scState);
     },
   });
   document.getElementById("scSave").addEventListener("click", saveable.save);
@@ -1122,23 +1284,23 @@ function clRenderOut() {
 
 function initClaims() {
   const ta = document.getElementById("clText");
-  const draft = lsGet("draft_claims", null);
+  const draft = wsGet("draft_claims", null);
   if (draft) { ta.value = draft.text || ""; clState = draft; }
   clRenderOut();
 
-  ta.addEventListener("input", () => { clState.text = ta.value; lsSet("draft_claims", clState); });
+  ta.addEventListener("input", () => { clState.text = ta.value; wsSet("draft_claims", clState); });
 
   document.getElementById("clRun").addEventListener("click", () => {
     clState.text = ta.value;
     clState.result = computeClaimAudit(clState.text);
-    lsSet("draft_claims", clState);
+    wsSet("draft_claims", clState);
     clRenderOut();
   });
 
   document.getElementById("clClear").addEventListener("click", () => {
     ta.value = "";
     clState = { text: "", result: null };
-    lsSet("draft_claims", clState);
+    wsSet("draft_claims", clState);
     clRenderOut();
     showToast("Cleared");
   });
@@ -1162,7 +1324,7 @@ function initClaims() {
     applyEntry: (p) => {
       clState = { text: p.text, result: p.result };
       document.getElementById("clText").value = p.text;
-      lsSet("draft_claims", clState);
+      wsSet("draft_claims", clState);
       clRenderOut();
     },
   });
@@ -1283,7 +1445,7 @@ function drRenderInputs() {
   drState.assets.forEach((a, i) => {
     document.getElementById("dr_" + i).addEventListener("input", (e) => {
       drState.assets[i].text = e.target.value;
-      lsSet("draft_drift", drState);
+      wsSet("draft_drift", drState);
     });
   });
 }
@@ -1310,7 +1472,7 @@ function drRenderOut() {
 }
 
 function initDrift() {
-  const draft = lsGet("draft_drift", null);
+  const draft = wsGet("draft_drift", null);
   if (draft && draft.assets && draft.assets.length >= 2) drState = draft;
   drRenderInputs();
   drRenderOut();
@@ -1319,12 +1481,12 @@ function initDrift() {
     if (drState.assets.length >= 8) { showToast("Eight assets is the limit"); return; }
     drState.assets.push({ label: "Asset " + (drState.assets.length + 1), text: "" });
     drRenderInputs();
-    lsSet("draft_drift", drState);
+    wsSet("draft_drift", drState);
   });
 
   document.getElementById("drRun").addEventListener("click", () => {
     drState.result = computeDrift(drState.assets);
-    lsSet("draft_drift", drState);
+    wsSet("draft_drift", drState);
     drRenderOut();
   });
 
@@ -1332,7 +1494,7 @@ function initDrift() {
     drState = { assets: [{ label: "Asset 1", text: "" }, { label: "Asset 2", text: "" }], result: null };
     drRenderInputs();
     drRenderOut();
-    lsSet("draft_drift", drState);
+    wsSet("draft_drift", drState);
     showToast("Cleared");
   });
 
@@ -1354,7 +1516,7 @@ function initDrift() {
       drState = { assets: p.assets, result: p.result };
       drRenderInputs();
       drRenderOut();
-      lsSet("draft_drift", drState);
+      wsSet("draft_drift", drState);
     },
   });
   document.getElementById("drSave").addEventListener("click", saveable.save);
@@ -1474,7 +1636,7 @@ function initRunway() {
   const host = document.getElementById("rwAssets");
   host.innerHTML = RW_ASSETS.map((a) => `<label class="check"><input type="checkbox" value="${a.id}" checked /><span>${escapeHtml(a.label)}${a.affiliateOnly ? " <em style=\"color:var(--ink-soft)\">(only if recruiting affiliates)</em>" : ""}</span></label>`).join("");
 
-  const draft = lsGet("draft_runway", null);
+  const draft = wsGet("draft_runway", null);
   if (draft) {
     document.getElementById("rwOpen").value = draft.inputs.cartOpen || "";
     document.getElementById("rwClose").value = draft.inputs.cartClose || "";
@@ -1490,7 +1652,7 @@ function initRunway() {
   document.getElementById("rwRun").addEventListener("click", () => {
     const inputs = rwReadInputs();
     rwState.result = computeRunway(inputs);
-    lsSet("draft_runway", { inputs, result: rwState.result });
+    wsSet("draft_runway", { inputs, result: rwState.result });
     rwRenderOut();
   });
 
@@ -1500,7 +1662,7 @@ function initRunway() {
     document.getElementById("rwAffiliates").checked = false;
     document.querySelectorAll("#rwAssets input").forEach((i) => { i.checked = true; });
     rwState.result = null;
-    lsSet("draft_runway", null);
+    wsSet("draft_runway", null);
     rwRenderOut();
     showToast("Cleared");
   });
@@ -1522,7 +1684,7 @@ function initRunway() {
       due: r.dueIso,
       status: "drafted",
     }));
-    lsSet("tracker_rows", rows);
+    wsSet("tracker_rows", rows);
     trRender();
     goTo("runway", "tracker");
     showToast("Sent to Ship Tracker");
@@ -1542,7 +1704,7 @@ function initRunway() {
       document.getElementById("rwAffiliates").checked = !!p.inputs.hasAffiliates;
       document.querySelectorAll("#rwAssets input").forEach((i) => { i.checked = p.inputs.assets.indexOf(i.value) !== -1; });
       rwState.result = { ...p.result, rows: p.result.rows.map((r) => ({ ...r, due: new Date(r.dueIso + "T00:00:00Z") })) };
-      lsSet("draft_runway", p);
+      wsSet("draft_runway", p);
       rwRenderOut();
     },
   });
@@ -1568,15 +1730,15 @@ function computeTrackerSummary(rows, todayIso) {
   return { total, live, pctShipped, overdue, overdueCount: overdue.length };
 }
 
-function trGetRows() { return lsGet("tracker_rows", []); }
-function trSetRows(rows) { lsSet("tracker_rows", rows); trRender(); }
+function trGetRows() { return wsGet("tracker_rows", []); }
+function trSetRows(rows) { wsSet("tracker_rows", rows); trRender(); }
 
 function trRender() {
   const rows = trGetRows();
   const summaryHost = document.getElementById("trSummary");
   const table = document.getElementById("trTable");
   const empty = document.getElementById("trEmpty");
-  const verdicts = lsGet("asset_verdicts", {});
+  const verdicts = wsGet("asset_verdicts", {});
 
   if (!rows.length) {
     summaryHost.innerHTML = "";
@@ -1616,7 +1778,7 @@ function trRender() {
         if (!row) return;
         const field = el.dataset.f;
         if (field === "status" && el.value === "live") {
-          const verdict = (lsGet("asset_verdicts", {}))[row.assetId];
+          const verdict = (wsGet("asset_verdicts", {}))[row.assetId];
           if (verdict && verdict.verdict === "Send it back") {
             showToast("Scorecard sent this back — fix it first");
             el.value = row.status;
@@ -1715,8 +1877,8 @@ function computeLedger(entries) {
   };
 }
 
-function lgGetEntries() { return lsGet("ledger_entries", []); }
-function lgSetEntries(e) { lsSet("ledger_entries", e); lgRender(); }
+function lgGetEntries() { return wsGet("ledger_entries", []); }
+function lgSetEntries(e) { wsSet("ledger_entries", e); lgRender(); }
 
 function lgRender() {
   const entries = lgGetEntries();
@@ -1819,11 +1981,12 @@ function initLedger() {
 /* ---------------------------------------------------------------- boot */
 
 document.addEventListener("DOMContentLoaded", () => {
+  initWorkspace();
   initGate();
   initTheme();
   initTabs();
   initSubTabs();
-  initProfile();
+  initProfileUI();
   initComposer();
   initSplitter();
   initBreaker();

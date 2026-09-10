@@ -14,7 +14,8 @@ Live at **https://chair.misanmorrison.com**
 
 ## What's in it
 
-Nine tools across three modules, plus a How to Use tab.
+Nine tools across three modules, plus a How to Use tab — and each business you
+set up is its own workspace.
 
 **Brief — write the command worth giving**
 
@@ -52,14 +53,30 @@ no external requests of any kind.
 - **Per-browser storage.** Work doesn't sync across devices, and clearing
   browser data clears it. The How to Use tab says so plainly.
 
+### Businesses as workspaces
+
+Chair is built for someone serving several clients. Every business added in the
+**My Businesses** panel gets a fully separate workspace: its own saved commands,
+splits, rankings, scorecards, claim audits, drift checks and runways, plus its
+own Ship Tracker pipeline and Command Ledger. Switching business reloads the page
+so every tool shows that business's work, and nothing bleeds between them — a
+client's ship rate and hours-saved figures are genuinely theirs.
+
+Storage is namespaced per business (`chair_p_<id>_<key>`); only the gate, the
+theme and the business list itself are global. Work saved before workspaces
+existed is migrated into the first business on load rather than orphaned.
+`Duplicate` copies a business's details into a new one but starts its saved work
+empty; `Delete` purges the business and every key belonging to it, and the last
+remaining business can't be deleted.
+
 ### Cross-tool wiring
 
 Tools hand off to each other rather than standing alone: Blank-Screen Breaker
 sends a chosen mission into Command Composer pre-filled; Composer feeds Scope
 Splitter; the Scorecard's verdicts are read by Ship Tracker to block premature
 "live" marks; Launch Runway populates Ship Tracker's pipeline; the Command
-Ledger reconciles across all of it. A shared **My Business** profile removes
-retyping across Composer and Breaker.
+Ledger reconciles across all of it. The active business's details feed
+Composer's context block and pre-fill Blank-Screen Breaker, so nothing is retyped.
 
 ### Password gate
 
